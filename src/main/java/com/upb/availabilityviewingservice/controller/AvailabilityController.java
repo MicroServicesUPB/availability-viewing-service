@@ -1,28 +1,43 @@
 package com.upb.availabilityviewingservice.controller;
 
-import com.upb.availabilityviewingservice.model.Table;
+
+import com.upb.availabilityviewingservice.model.TableResponse;
 import com.upb.availabilityviewingservice.service.AvailabilityService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.format.annotation.DateTimeFormat;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/tables")
+@RequiredArgsConstructor
+@RequestMapping("/tables22")
 public class AvailabilityController {
-    @Autowired
-    private AvailabilityService availabilityService;
-    @PostMapping
-    public ResponseEntity<Long> addTable(@RequestBody Table table) {
-        long tableId = availabilityService.addTable(table);
-        return new ResponseEntity<>(tableId, HttpStatus.CREATED);
+
+    private final AvailabilityService availabilityService;
+    @GetMapping("/available")
+    public ResponseEntity<List<TableResponse>> getAvailableTables(
+            @RequestParam("startTime") @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime startTime,
+            @RequestParam("endTime") @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime endTime) {
+
+        List<TableResponse> availableTables = availabilityService.getAvailableTables(startTime, endTime);
+        return ResponseEntity.ok(availableTables);
     }
-    @GetMapping("/{id}")
-    public ResponseEntity <Table> getTableById(@PathVariable long id){
-        Table table = availabilityService.getTableById(id);
-        return new ResponseEntity<>(table, HttpStatus.OK);
+    @PutMapping("/{tableId}/reserve")
+    public ResponseEntity<String> reserveTable(@PathVariable Long tableId) {
+        availabilityService.reserveTable(tableId);
+        return ResponseEntity.ok("Mesa reservada con éxito");
+    }
+
+    @PostMapping("/initialize")
+    public ResponseEntity<String> initializeTableAvailability() {
+        availabilityService.initializeAvailability();
+        return ResponseEntity.ok("Disponibilidad de mesas inicializada");
     }
 
 }
